@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registro de Mantenimiento de Unidades</title>
+  <link href="https://fonts.googleapis.com/css2?family=Century+Gothic&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      background: linear-gradient(145deg, #0c1a2b, #1c2c3c);
+      font-family: 'Century Gothic', 'Segoe UI', sans-serif;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .ventana {
+      background: white; border-radius: 14px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.3);
+      width: 350px; padding: 25px 30px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .ventana img {
+      width: 80px; height: 80px;
+      margin-bottom: 20px; object-fit: contain;
+    }
+    .ventana h2 {
+      margin: 0 0 20px; font-size: 1.4rem;
+      font-weight: bold; color: #1a1a1a;
+      text-align: center; width: 100%;
+    }
+    form {
+      width: 100%; display: flex; flex-direction: column; gap: 12px;
+    }
+    label {
+      font-size: 0.85rem; color: #333;
+    }
+    input, select, textarea {
+      width: 100%; padding: 8px 10px;
+      border-radius: 6px; border: 1px solid #aaa;
+      font-size: 0.9rem; font-family: 'Century Gothic', sans-serif;
+    }
+    textarea {
+      resize: vertical; min-height: 60px;
+    }
+    button {
+      margin-top: 10px; padding: 10px 0;
+      border: none; border-radius: 8px;
+      background-color: #374151; color: white;
+      font-size: 1rem; font-weight: bold;
+      cursor: pointer; transition: background-color 0.3s ease;
+    }
+    button:hover { background-color: #1f2937; }
+    .mensaje {
+      margin-top: 12px; font-size: 0.9rem;
+      text-align: center; padding: 8px;
+      border-radius: 8px; display: none;
+    }
+    .mensaje.exito {
+      background-color: #1e3a8a; color: #dbeafe;
+      border: 1px solid #3b82f6;
+    }
+    .mensaje.error {
+      background-color: #7f1d1d; color: #fee2e2;
+      border: 1px solid #f87171;
+    }
+  </style>
+</head>
+<body>
+
+<div class="ventana">
+  <img src="images.png" alt="Icono" />
+  <h2>Registro de Mantenimiento de Unidades</h2>
+  <form id="formulario" novalidate>
+    <label for="fecha">Fecha</label>
+    <input type="text" id="fecha" name="fecha" readonly />
+
+    <label for="nombre">Nombre del Conductor</label>
+    <input type="text" id="nombre" name="nombre" required />
+
+    <label for="numvehiculo">Número de Vehículo</label>
+    <input type="text" id="numvehiculo" name="numvehiculo" required />
+
+    <label for="Tarje">Tarjeta de Circulación</label>
+    <select id="Tarje" name="Tarje" required>
+      <option value="SI">SI</option>
+      <option value="NO">NO</option>
+    </select>
+
+    <label for="poli">Póliza</label>
+    <select id="poli" name="poli" required>
+      <option value="SI">SI</option>
+      <option value="NO">NO</option>
+    </select>
+
+    <label for="kilometr">Kilometraje</label>
+    <input type="text" id="kilometr" name="kilometr" required />
+
+    <label for="Lice">Licencia de Conducir Vigente</label>
+    <input type="text" id="Lice" name="Lice" required />
+
+    <label for="ruta">Ruta</label>
+    <select id="ruta" name="ruta" required>
+      <option value="" disabled selected>Agencia:</option>
+      <option value="Pachuca">Pachuca</option>
+      <option value="Tulancingo">Tulancingo</option>
+      <option value="Huichapan">Huichapan</option>
+      <option value="Ixmiquilpan">Ixmiquilpan</option>
+      <option value="San Agustin">San Agustin</option>
+      <option value="Tula">Tula</option>
+      <option value="Zimapan">Zimapan</option>
+      <option value="Huejutla">Huejutla</option>
+      <option value="Molango">Molango</option>
+      <option value="San Bartolo">San Bartolo</option>
+      <option value="Huayacocotla">Huayacocotla</option>
+      <option value="Tepeji del Rio">Tepeji del Rio</option>
+      <option value="Otra">Otra</option>
+    </select>
+
+    <label for="detalles">Detalles</label>
+    <textarea id="detalles" name="detalles"></textarea>
+
+    <label for="telefono">Teléfono</label>
+    <input type="tel" id="telefono" name="telefono" required />
+
+    <button type="submit">Generar PDF</button>
+    <div id="mensajeRespuesta" class="mensaje"></div>
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  const { jsPDF } = window.jspdf;
+  const form = document.getElementById('formulario');
+  const mensaje = document.getElementById('mensajeRespuesta');
+  const fechaInput = document.getElementById('fecha');
+
+  fechaInput.value = new Date().toLocaleDateString('es-MX', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    mensaje.style.display = 'none';
+
+    const datos = {
+      fecha: fechaInput.value,
+      nombre: form.nombre.value.trim(),
+      numvehiculo: form.numvehiculo.value.trim(),
+      tarje: form.Tarje.value,
+      poli: form.poli.value,
+      kilometr: form.kilometr.value.trim(),
+      Lice: form.Lice.value.trim(),
+      ruta: form.ruta.value,
+      detalles: form.detalles.value.trim(),
+      tel: form.telefono.value.trim()
+    };
+
+    if (!datos.nombre || !datos.numvehiculo || !datos.ruta || !datos.tel || !datos.kilometr) {
+      mostrarMensaje('Complete todos los campos obligatorios.', 'error');
+      return;
+    }
+
+    if (!/^\d{7,}$/.test(datos.tel)) {
+      mostrarMensaje('El número telefónico debe contener al menos 7 dígitos.', 'error');
+      return;
+    }
+
+    const doc = new jsPDF();
+    const ancho = 190;
+    let y = 20;
+
+    doc.setFillColor(25, 42, 65);
+    doc.rect(0, 0, 210, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(16);
+    doc.text('REPORTE DE MANTENIMIENTO DE UNIDADES', 105, 18, { align: 'center' });
+
+    y = 40;
+    doc.setTextColor(33, 33, 33);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(12);
+
+    const campos = [
+      { label: "Fecha", value: datos.fecha },
+      { label: "Nombre del Conductor", value: datos.nombre },
+      { label: "Número de Vehículo", value: datos.numvehiculo },
+      { label: "Tarjeta de Circulación", value: datos.tarje },
+      { label: "Póliza", value: datos.poli },
+      { label: "Kilometraje", value: datos.kilometr },
+      { label: "Licencia de Conducir Vigente", value: datos.Lice },
+      { label: "Ruta asignada", value: datos.ruta },
+      { label: "Teléfono", value: datos.tel }
+    ];
+
+    campos.forEach(({ label, value }) => {
+      doc.setFillColor(245, 245, 245);
+      doc.rect(15, y, ancho, 10, 'F');
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${label}: ${value}`, 20, y + 7);
+      y += 12;
+    });
+
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, y, ancho, 10, 'F');
+    doc.text("Detalles:", 20, y + 7);
+    y += 12;
+
+    const detallesLineas = doc.splitTextToSize(datos.detalles || 'N/A', 180);
+    detallesLineas.forEach(linea => {
+      doc.text(linea, 20, y);
+      y += 8;
+    });
+
+    y += 20;
+    doc.setLineWidth(0.5);
+    doc.line(130, y + 15, 190, y + 15);
+    doc.text('Firma del responsable', 130, y + 22);
+
+    doc.save(`reporte_${datos.nombre.replace(/\s+/g, '_')}.pdf`);
+    mostrarMensaje('PDF generado exitosamente.', 'exito');
+    form.reset();
+    fechaInput.value = new Date().toLocaleDateString('es-MX', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+  });
+
+  function mostrarMensaje(texto, tipo) {
+    mensaje.textContent = texto;
+    mensaje.className = 'mensaje ' + tipo;
+    mensaje.style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
+
+
